@@ -30,16 +30,19 @@ class HoundsAndHare:
     """
 
     def __init__(self):
-        self.board = ["_"] * 9
-        self.board[0] = "Hare"
-        self.turn = "H"
+        self.turn = "O"
         self.reset()
 
     def reset(self):
         """
         Resets the starting board state.
         """
-        pass
+        self.board = ["_"] * 11
+        self.board[10] = "A"
+        self.board[0] = "O"
+        self.board[1] = "O"
+        self.board[3] = "O"
+
 
     def __str__(self):
         pass
