@@ -7,6 +7,23 @@ algorithm for both players.
 """
 import abc
 
+"""
+builds the edges of the board
+"""
+EDGES = {
+    0: {1, 2, 3},
+    1: {0, 2, 4, 5},
+    2: {0, 1, 3, 5},
+    3: {0, 2, 5, 6},
+    4: {1, 5, 7},
+    5: {1, 2, 3, 4, 6, 7, 8, 9},
+    6: {3, 5, 9},
+    7: {4, 5, 8, 10},
+    8: {5, 7, 9, 10},
+    9: {5, 6, 8, 10},
+    10: {7, 8, 9},
+}
+
 class HoundsAndHareError(AttributeError):
     """
     This class is used to indicate a problem in the H & H game.
@@ -17,9 +34,11 @@ class HoundsAndHare:
     This class implements Hounds and Hares.
     The board is represented as a two-dimensional list.  Each
     location on the board contains one of the following symbols:
-       'O' for a Hound
+       'h1' for Hound 1
+       'h2' for hound 2
+       'h3' for hound 3
        'A' for the Hare
-       '.' for an empty location
+       '_' for an empty location
     The hounds always go first. Hounds may move vertically or 
     horizontally, but never left. The Hare may move in any direction.
     The Hounds win if they can corner the Hare so that it has no 
@@ -28,6 +47,7 @@ class HoundsAndHare:
     sideways (vertically) 10 turns in a row, it is "stalling" and the 
     Hare automatically wins.
     """
+
 
     def __init__(self):
         self.turn = "O"
@@ -39,40 +59,92 @@ class HoundsAndHare:
         """
         self.board = ["_"] * 11
         self.board[10] = "A"
-        self.board[0] = "O"
-        self.board[1] = "O"
-        self.board[3] = "O"
+        self.board[0] = "h1"
+        self.board[1] = "h2"
+        self.board[3] = "h3"
 
 
     def __str__(self):
-        pass
+        return self.boardToStr(self.board)
 
+
+        
     def boardToStr(self, board):
         """
-        Returns a string representation of the H & H board.
+        Returns a string representation of the konane board.
         """
-        pass
+        result = "  "
+        for i in range(self.size):
+            result += str(i) + " "
+        result += "\n"
+        for i in range(self.size):
+            result += str(i) + " "
+            for j in range(self.size):
+                result += str(board[i][j]) + " "
+            result += "\n"
+        return result
 
-    def valid(self, row, col):
+    def can_move(self, player, current_pos, new_pos):
+        if self.board[new_pos] != "_":
+            return False
+        if current_pos == new_pos:
+            return False
+        if player == 'hounds':
+            if current_pos - new_pos > 1 or current_pos == 10 or new_pos == 0:
+                return False
+            if new_pos in EDGES[current_pos]:
+                return True
+            else:
+                return False
+        else:
+            # hare
+            if new_pos in EDGES[current_pos]:
+                return True
+            else:
+                return False
+
+    def valid(self, row):
         """
         Returns true if the given row and col represent a valid location on
         the H & H board.
         """
-        pass
+        return row >= 0 and row <= 10
 
-    def contains(self, board, row, col, symbol):
+    def get_hare_position(self):
+        """
+        returns the current position of the hare
+        """
+        for key, val in self.board.items():
+            if val == "A":
+                return key
+
+    def get_hounds_position(self):
+        h1 = -1
+        h2 = -1
+        h3 = -1
+        for key, val in self.board.items():
+            if val == "h1":
+                h1 = key
+            elif val == "h2":
+                h2 = key
+            elif val == "h3":
+                h3 = key
+        return (h1, h2, h3)
+    
+
+    def contains(self, board, row, symbol):
         """
         Returns true if the given row and col represent a valid location on
         the H & H board and that lcoation contains the given symbol.
         """
-        pass
+        return self.valid(row) and board[row]==symbol
 
     def makeMove(self, player, move):
         """
         Updates the current board with the next board created by the given
         move.
         """
-        pass
+        self.board = self.nextBoard(self.board, player, move)
 
     def nextBoard(self, board, player, move):
         """
@@ -81,17 +153,39 @@ class HoundsAndHare:
         raise a HoundsAndHareError if the move is invalid. It returns the copy of
         the board, and does not change the given board.
         """
-    def generateHoundMoves(board):
+    def generateHoundMoves(self):
         """
         Generates all legal moves for the three Hounds
         """
-        pass
+        moves_hound1 = []
+        moves_hound2 = []
+        moves_hound3 = []
+        pos_hound1, pos_hound2, pos_hound3 = self.get_hounds_position()
+        possible_moves_hound1 = EDGES[pos_hound1]
+        possible_moves_hound2 = EDGES[pos_hound2]
+        possible_moves_hound3 = EDGES[pos_hound3]
+        for move_pos in possible_moves_hound1:
+            if self.can_move('hounds', current_pos=pos_hound1, new_pos=move_pos):
+                    moves_hound1.append(move_pos)
+        for move_pos in possible_moves_hound2:
+            if self.can_move('hounds', current_pos=pos_hound2, new_pos=move_pos):
+                    moves_hound2.append(move_pos)
+        for move_pos in possible_moves_hound3:
+            if self.can_move('hounds', current_pos=pos_hound3, new_pos=move_pos):
+                    moves_hound3.append(move_pos)
+        return (moves_hound1, moves_hound2, moves_hound3)
 
-    def generateHareMoves(board):
+    def generateHareMoves(self):
         """
         Generates all legal moves for the Hare
         """
-        pass
+        moves = []
+        pos = self.get_hare_position()
+        possible_moves = EDGES[pos]
+        for move_pos in possible_moves:
+            if self.can_move('hare', current_pos=pos, new_pos=move_pos):
+                moves.append(move_pos)
+        return moves
 
     def generateMoves(self, board, player):
         """
