@@ -89,7 +89,7 @@ class HoundsAndHare:
             return False
         if current_pos == new_pos:
             return False
-        if player == 'hounds':
+        if player.turn == 'hounds':
             if current_pos - new_pos > 1 or current_pos == 10 or new_pos == 0:
                 return False
             if new_pos in EDGES[current_pos]:
@@ -193,11 +193,17 @@ class HoundsAndHare:
         current board configuration.
         """
 
-        # use the previous two methods
-        pass
+        if player.turn == "Hare":
+            return self.generateHareMoves()
+        else:
+            return self.generateHoundMoves()
 
-    def switch_turn(self):
-        self.turn = "H" if self.turn == "Hare" else "Hare"
+
+    def switch_turn(self): 
+        if self.turn == "A":
+            self.turn = "O" 
+        
+        else:  self.turn = "A"
     
     def is_game_over(self):
         """
@@ -240,17 +246,65 @@ class Player(metaclass = abc.ABCMeta):
     A base class for H & H players.  All players must implement
     the the initialize and getMove methods.
     """
-    pass
+    name = "Player"
+    wins = 0
+    losses = 0
+    def results(self):
+        result = self.name
+        result += " Wins:" + str(self.wins)
+        result += " Losses:" + str(self.losses)
+        result += " Score: " + str(self.score())
+        return result
+
+    def score(self):
+        return self.wins - self.losses
+
+    def lost(self):
+        self.losses += 1
+
+    def won(self):
+        self.wins += 1
+    def reset(self):
+        self.wins = 0
+        self.losses = 0
+
+    @abc.abstractmethod
+    def initialize(self, side):
+        """
+        Records the player's side, either 'O' for hound or
+        'A' for Hare.  Should also set the name of the player.
+        """
+
+
+    @abc.abstractmethod
+    def getMove(self, board):
+        """
+        Given the current board, should return a valid move.
+        """
+        return
 
 class HumanPlayer(Player):
     """
     Prompts a human player for a move.
     """
+    def initialize(self, side):
+        self.side = side
+        self.name = "Human"
+
+    def getMove(self, board):
+        if self.side == "A":
+            inputs = list(map( int, input("Enter a valid move for Hare: ").split()))
+        else:
+            inputs = list(map( int, input("Enter which hare to move and a valid move: ").split()))
+        if inputs[1] == -1:
+            return []
+        return inputs
 
 class RandomPlayer(HoundsAndHare, Player):
     """
     Chooses a random move from the set of possible moves.
     """
+
 
 class SimplePlayer(HoundsAndHare, Player):
     """
