@@ -153,6 +153,7 @@ class HoundsAndHare:
         raise a HoundsAndHareError if the move is invalid. It returns the copy of
         the board, and does not change the given board.
         """
+
     def generateHoundMoves(self):
         """
         Generates all legal moves for the three Hounds
@@ -187,7 +188,7 @@ class HoundsAndHare:
                 moves.append(move_pos)
         return moves
 
-    def generateMoves(self, board, player):
+    def generateMoves(self, player):
         """
         Generates and returns all legal moves for the given player using the
         current board configuration.
@@ -197,6 +198,43 @@ class HoundsAndHare:
             return self.generateHareMoves()
         else:
             return self.generateHoundMoves()
+
+    
+    def minimax(self, depth, is_maximizing):
+        if depth == 0 or self.is_game_over():
+            return 0
+
+        if is_maximizing:
+            max_value = -1
+            for i, cell in enumerate(self.board):
+                if cell == "_":
+                    self.board[i] = self.turn
+                    value = self.minimax(depth - 1, False)
+                    self.board[i] = "_"
+                    max_value = max(max_value, value)
+            return max_value
+        else:
+            min_value = 1
+            for i, cell in enumerate(self.board):
+                if cell == "_":
+                    self.board[i] = self.turn
+                    value = self.minimax(depth - 1, True)
+                    self.board[i] = "_"
+                    min_value = min(min_value, value)
+            return min_value
+    #determines the best move of possible moves from minimax
+    def best_move(self):
+        max_value = -1
+        best_move = None
+        for i, cell in enumerate(self.board):
+            if cell == "_":
+                self.board[i] = self.turn
+                value = self.minimax(9, False)
+                self.board[i] = "_"
+                if value > max_value:
+                    max_value = value
+                    best_move = i
+        return best_move
 
 
     def switch_turn(self): 
@@ -230,13 +268,76 @@ class HoundsAndHare:
         the Hare wins. When show is true, it will display each move
         in the game.
         """
-        pass
+        self.reset()
+        p1.initialize('A')
+        p2.initialize('O')
+        print (p1.name, "vs", p2.name)
+        while 1:
+            if show:
+                print (self)
+                print ("player B's turn")
+            try:
+                move = p1.getMove(self.board)
+            except Exception as e:
+                print ("player B is forfeiting because of error:", str(e))
+                move = []
+            if move == []:
+                result = 'W'
+                break
+            try:
+                self.makeMove('B', move)
+            except HoundsAndHareError:
+                print ("ERROR: invalid move by", p1.name)
+                result = 'W'
+                break
+            if show:
+                print (move)
+                print
+                print (self)
+                print ("player W's turn")
+            try:
+                move = p2.getMove(self.board)
+            except Exception as e:
+                print ("player W is forfeiting because of error:", str(e))
+                move = []
+            if move == []:
+                result = 'B'
+                break
+            try:
+                self.makeMove('W', move)
+            except HoundsAndHareError:
+                print ("ERROR: invalid move by", p2.name)
+                result = 'B'
+                break
+            if show:
+                print (move)
+                print
+        if show:
+            print ("Game over")
+        return result
     
     def playNGames(self, n, p1, p2, show):
         """
         Will play out n games between player p1 and player p2.
-        Prints the total number of games won by each player.
+        The players alternate going first.  Prints the total
+        number of games won by each player.
         """
+        first = p1
+        second = p2
+        for i in range(n):
+            print ("Game", i)
+            winner = self.playOneGame(first, second, show)
+            if winner == 'B':
+                first.won()
+                second.lost()
+                print (first.name, "wins")
+            else:
+                first.lost()
+                second.won()
+                print (second.name, "wins")
+            temp = first
+            first = second
+            second = temp
 
 
 
@@ -313,44 +414,12 @@ class SimplePlayer(HoundsAndHare, Player):
 
 
 
+game = HoundsAndHare()
+
+
 
     # Code for the AI player
 
-    # def minimax(self, depth, is_maximizing):
-    #     if depth == 0 or self.is_game_over():
-    #         return 0
-
-    #     if is_maximizing:
-    #         max_value = -1
-    #         for i, cell in enumerate(self.board):
-    #             if cell == "_":
-    #                 self.board[i] = self.turn
-    #                 value = self.minimax(depth - 1, False)
-    #                 self.board[i] = "_"
-    #                 max_value = max(max_value, value)
-    #         return max_value
-    #     else:
-    #         min_value = 1
-    #         for i, cell in enumerate(self.board):
-    #             if cell == "_":
-    #                 self.board[i] = self.turn
-    #                 value = self.minimax(depth - 1, True)
-    #                 self.board[i] = "_"
-    #                 min_value = min(min_value, value)
-    #         return min_value
-    # #determines the best move of possible moves from minimax
-    # def best_move(self):
-    #     max_value = -1
-    #     best_move = None
-    #     for i, cell in enumerate(self.board):
-    #         if cell == "_":
-    #             self.board[i] = self.turn
-    #             value = self.minimax(9, False)
-    #             self.board[i] = "_"
-    #             if value > max_value:
-    #                 max_value = value
-    #                 best_move = i
-    #     return best_move
 
 
 # #exceutes a game
