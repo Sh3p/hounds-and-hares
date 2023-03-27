@@ -6,6 +6,7 @@ The game plays using the minimax
 algorithm for both players.
 """
 import abc
+import random
 
 """
 builds the edges of the board
@@ -68,28 +69,36 @@ class HoundsAndHare:
         return self.boardToStr(self.board)
 
 
-        
     def boardToStr(self, board):
         """
-        Returns a string representation of the konane board.
+        Returns a string representation of the H & H board.
+
+        I am assuming the board array is laid out like:
+        X 1 4 7 X
+        0 2 5 8 10
+        X 3 6 9 X
         """
-        result = "  "
-        for i in range(self.size):
-            result += str(i) + " "
-        result += "\n"
-        for i in range(self.size):
-            result += str(i) + " "
-            for j in range(self.size):
-                result += str(board[i][j]) + " "
-            result += "\n"
-        return result
+        print(board)
+        topRow = f"X {board[1]} {board[4]} {board[7]} X"
+        midRow = f"\n{board[0]} {board[2]} {board[5]} {board[8]} {board[10]}"
+        botRow = f"\nX {board[3]} {board[6]} {board[9]} X"
+
+        return f"{topRow}{midRow}{botRow}"
+        # for i in range(self.size):
+        #     result += str(i) + " "
+        # result += "\n"
+        # for i in range(self.size):
+        #     result += str(i) + " "
+        #     for j in range(self.size):
+        #         result += str(board[i][j]) + " "
+        #     result += "\n"
 
     def can_move(self, player, current_pos, new_pos):
         if self.board[new_pos] != "_":
             return False
         if current_pos == new_pos:
             return False
-        if player.turn == 'hounds':
+        if player == 'hounds':
             if current_pos - new_pos > 1 or current_pos == 10 or new_pos == 0:
                 return False
             if new_pos in EDGES[current_pos]:
@@ -114,21 +123,21 @@ class HoundsAndHare:
         """
         returns the current position of the hare
         """
-        for key, val in self.board.items():
+        for i, val in enumerate(self.board):
             if val == "A":
-                return key
+                return i
 
     def get_hounds_position(self):
-        h1 = -1
-        h2 = -1
-        h3 = -1
-        for key, val in self.board.items():
-            if val == "h1":
-                h1 = key
-            elif val == "h2":
-                h2 = key
-            elif val == "h3":
-                h3 = key
+        h1 = self.board.index('h1')
+        h2 = self.board.index('h2')
+        h3 = self.board.index('h3')
+        # for i, val in enumerate(self.board):
+        #     if val == "h1":
+        #         h1 = i
+        #     elif val == "h2":
+        #         h2 = i
+        #     elif val == "h3":
+        #         h3 = i
         return (h1, h2, h3)
     
 
@@ -194,7 +203,7 @@ class HoundsAndHare:
         current board configuration.
         """
 
-        if player.turn == "Hare":
+        if player == "Hare":
             return self.generateHareMoves()
         else:
             return self.generateHoundMoves()
@@ -378,7 +387,7 @@ class Player(metaclass = abc.ABCMeta):
 
 
     @abc.abstractmethod
-    def getMove(self, board):
+    def getMove(self):
         """
         Given the current board, should return a valid move.
         """
@@ -392,11 +401,11 @@ class HumanPlayer(Player):
         self.side = side
         self.name = "Human"
 
-    def getMove(self, board):
+    def getMove(self):
         if self.side == "A":
             inputs = list(map( int, input("Enter a valid move for Hare: ").split()))
         else:
-            inputs = list(map( int, input("Enter which hare to move and a valid move: ").split()))
+            inputs = list(map( int, input("Enter which hound to move and a valid move: ").split()))
         if inputs[1] == -1:
             return []
         return inputs
@@ -405,16 +414,37 @@ class RandomPlayer(HoundsAndHare, Player):
     """
     Chooses a random move from the set of possible moves.
     """
+    def initialize(self, side):
+        self.side = side
+        self.name = "RandomPlayer"
+    def getMove(self):
+        moves = self.generateMoves(self.side)
+        n = len(moves)
+        if n == 0:
+            return []
+        else:
+            return moves[random.randrange(0, n)]
 
 
 class SimplePlayer(HoundsAndHare, Player):
     """
     Always chooses the first move from the set of possible moves.
     """
+    def initialize(self, side):
+        self.side = side
+        self.name = "SimplePlayer"
+    def getMove(self, board):
+        moves = self.generateMoves(self.side)
+        n = len(moves)
+        if n == 0:
+            return []
+        else:
+            return moves[0]
 
 
 
 game = HoundsAndHare()
+game.playNGames(1, SimplePlayer(), RandomPlayer(), 1)
 
 
 
