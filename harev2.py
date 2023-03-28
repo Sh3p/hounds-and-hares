@@ -78,7 +78,7 @@ class HoundsAndHare:
         0 2 5 8 10
         X 3 6 9 X
         """
-        print(board)
+        #print(board)
         topRow = f"X {board[1]} {board[4]} {board[7]} X"
         midRow = f"\n{board[0]} {board[2]} {board[5]} {board[8]} {board[10]}"
         botRow = f"\nX {board[3]} {board[6]} {board[9]} X"
@@ -98,7 +98,7 @@ class HoundsAndHare:
             return False
         if current_pos == new_pos:
             return False
-        if player == 'hounds':
+        if player == 'O':
             if current_pos - new_pos > 1 or current_pos == 10 or new_pos == 0:
                 return False
             if new_pos in EDGES[current_pos]:
@@ -157,11 +157,19 @@ class HoundsAndHare:
 
     def nextBoard(self, board, player, move):
         """
-        Given a move for a particular player from (r1,c1) to (r2,c2) this
+        Given a move for a particular player 'A' for hare, h1 for hound 1, 
+        h2 for hound 2, h3 for hound 3, this
         executes the move on a copy of the current H & H board.  It will
         raise a HoundsAndHareError if the move is invalid. It returns the copy of
         the board, and does not change the given board.
         """
+        temp = board
+        if player == 'A':
+            if move in self.generateHareMoves():
+                temp[self.get_hare_position] = '_'
+                temp[move] = 'A'
+                return temp
+            else: return print("move invalid")
 
     def generateHoundMoves(self):
         """
@@ -175,15 +183,16 @@ class HoundsAndHare:
         possible_moves_hound2 = EDGES[pos_hound2]
         possible_moves_hound3 = EDGES[pos_hound3]
         for move_pos in possible_moves_hound1:
-            if self.can_move('hounds', current_pos=pos_hound1, new_pos=move_pos):
+            if self.can_move('O', current_pos=pos_hound1, new_pos=move_pos):
                     moves_hound1.append(move_pos)
         for move_pos in possible_moves_hound2:
-            if self.can_move('hounds', current_pos=pos_hound2, new_pos=move_pos):
+            if self.can_move('O', current_pos=pos_hound2, new_pos=move_pos):
                     moves_hound2.append(move_pos)
         for move_pos in possible_moves_hound3:
-            if self.can_move('hounds', current_pos=pos_hound3, new_pos=move_pos):
+            if self.can_move('O', current_pos=pos_hound3, new_pos=move_pos):
                     moves_hound3.append(move_pos)
-        return (moves_hound1, moves_hound2, moves_hound3)
+        total_moves = moves_hound1 + moves_hound2 + moves_hound3
+        return total_moves
 
     def generateHareMoves(self):
         """
@@ -203,7 +212,7 @@ class HoundsAndHare:
         current board configuration.
         """
 
-        if player == "Hare":
+        if player == 'A':
             return self.generateHareMoves()
         else:
             return self.generateHoundMoves()
@@ -278,23 +287,23 @@ class HoundsAndHare:
         in the game.
         """
         self.reset()
-        p1.initialize('A')
-        p2.initialize('O')
+        p1.initialize('O')
+        p2.initialize('A')
         print (p1.name, "vs", p2.name)
         while 1:
             if show:
                 print (self)
-                print ("player B's turn")
+                print ("Player Hounds's turn")
             try:
-                move = p1.getMove(self.board)
+                move = p1.getMove()
             except Exception as e:
-                print ("player B is forfeiting because of error:", str(e))
+                print ("player Hound is forfeiting because of error:", str(e))
                 move = []
             if move == []:
                 result = 'W'
                 break
             try:
-                self.makeMove('B', move)
+                self.makeMove('O', move)
             except HoundsAndHareError:
                 print ("ERROR: invalid move by", p1.name)
                 result = 'W'
@@ -417,6 +426,7 @@ class RandomPlayer(HoundsAndHare, Player):
     def initialize(self, side):
         self.side = side
         self.name = "RandomPlayer"
+
     def getMove(self):
         moves = self.generateMoves(self.side)
         n = len(moves)
@@ -433,7 +443,9 @@ class SimplePlayer(HoundsAndHare, Player):
     def initialize(self, side):
         self.side = side
         self.name = "SimplePlayer"
-    def getMove(self, board):
+
+
+    def getMove(self):
         moves = self.generateMoves(self.side)
         n = len(moves)
         if n == 0:
@@ -441,10 +453,21 @@ class SimplePlayer(HoundsAndHare, Player):
         else:
             return moves[0]
 
+class MinimaxPlayer(HoundsAndHare, Player):
+
+    def initialize(self, side):
+        self.side = side
+        self.name = "MinimaxPlayer"
+
+    def getMove(self):
+        move = self.best_move()
+        return move
+
+
 
 
 game = HoundsAndHare()
-game.playNGames(1, SimplePlayer(), RandomPlayer(), 1)
+game.playOneGame(SimplePlayer(), RandomPlayer(), 1)
 
 
 
