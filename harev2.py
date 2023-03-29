@@ -164,23 +164,25 @@ class HoundsAndHare:
         raise a HoundsAndHareError if the move is invalid. It returns the copy of
         the board, and does not change the given board.
         """
-        if len(move) != 2:
-            raise HoundsAndHareError
+        # if len(move) != 2:
+        #     raise HoundsAndHareError
 
         temp = board
-        m1 = move[0] # starting position
-        m2 =  move[1] # ending position
+
+        startPos = move[0] 
+        endPos =  move[1] 
+
         if player == 'A':
-            if self.can_move('hare', m1, m2):
-                temp[m1] = '_'
-                temp[m2] = 'A'
+            if self.can_move('hare', startPos, endPos):
+                temp[startPos] = '_'
+                temp[endPos] = 'A'
                 return temp
             else: return print("move invalid")
         else: 
-            if self.can_move('O', m1, m2):
-                hound_val = temp[m1]
-                temp[m1] = '_'
-                temp[m2] = hound_val
+            if self.can_move('O', startPos, endPos):
+                hound_val = temp[startPos]
+                temp[startPos] = '_'
+                temp[endPos] = hound_val
                 return temp
             else: return print("move invalid")
 
@@ -225,8 +227,8 @@ class HoundsAndHare:
         possible_moves = EDGES[pos]
         for move_pos in possible_moves:
             if self.can_move('hare', current_pos=pos, new_pos=move_pos):
-                moves.append(move_pos)
-        print(moves)
+                move = [pos, move_pos]
+                moves.append(move)
         return moves
 
     def generateMoves(self, player):
