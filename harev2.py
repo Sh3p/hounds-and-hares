@@ -7,6 +7,7 @@ algorithm for both players.
 """
 import abc
 import random
+import traceback
 
 """
 builds the edges of the board
@@ -167,8 +168,8 @@ class HoundsAndHare:
             raise HoundsAndHareError
 
         temp = board
-        m1 = move[0]
-        m2 =  move[1]
+        m1 = move[0] # starting position
+        m2 =  move[1] # ending position
         if player == 'A':
             if self.can_move('hare', m1, m2):
                 temp[m1] = '_'
@@ -197,20 +198,20 @@ class HoundsAndHare:
         for move_pos in possible_moves_hound1:
             if self.can_move('O', current_pos=pos_hound1, new_pos=move_pos):
                     move_list1 = []
-                    move_list1[0] = pos_hound1
-                    move_list1[1] = move_pos
+                    move_list1.append(pos_hound1)
+                    move_list1.append(move_pos)
                     moves_hound1.append(move_list1)
         for move_pos in possible_moves_hound2:
             if self.can_move('O', current_pos=pos_hound2, new_pos=move_pos):
                     move_list2 = []
-                    move_list2[0] = pos_hound2
-                    move_list2[1] = move_pos
+                    move_list2.append(pos_hound2)
+                    move_list2.append(move_pos)
                     moves_hound2.append(move_list2)
         for move_pos in possible_moves_hound3:
             if self.can_move('O', current_pos=pos_hound3, new_pos=move_pos):
                     move_list3 = []
-                    move_list3[0] = pos_hound3
-                    move_list3[1] = move_pos
+                    move_list3.append(pos_hound3)
+                    move_list3.append(move_pos)
                     moves_hound3.append(move_list3)
         total_moves = moves_hound1 + moves_hound2 + moves_hound3
         return total_moves
@@ -225,6 +226,7 @@ class HoundsAndHare:
         for move_pos in possible_moves:
             if self.can_move('hare', current_pos=pos, new_pos=move_pos):
                 moves.append(move_pos)
+        print(moves)
         return moves
 
     def generateMoves(self, player):
@@ -322,6 +324,8 @@ class HoundsAndHare:
                 move = p1.getMove()
             except Exception as e:
                 print ("player Hound is forfeiting because of error:", str(e))
+                print(traceback.format_exc())
+
                 move = []
             if move == []:
                 result = 'A'
@@ -330,6 +334,8 @@ class HoundsAndHare:
                 self.makeMove('O', move)
             except HoundsAndHareError:
                 print ("ERROR: invalid move by", p1.name)
+                print(traceback.format_exc())
+
                 result = 'A'
                 break
             if show:
@@ -338,9 +344,11 @@ class HoundsAndHare:
                 print (self)
                 print ("player Hare's turn")
             try:
-                move = p2.getMove(self.board)
+                move = p2.getMove()
             except Exception as e:
                 print ("player Hare is forfeiting because of error:", str(e))
+                print(traceback.format_exc())
+
                 move = []
             if move == []:
                 result = 'O'
@@ -349,6 +357,7 @@ class HoundsAndHare:
                 self.makeMove('A', move)
             except HoundsAndHareError:
                 print ("ERROR: invalid move by", p2.name)
+                print(traceback.format_exc())
                 result = 'O'
                 break
             if show:
