@@ -163,11 +163,23 @@ class HoundsAndHare:
         raise a HoundsAndHareError if the move is invalid. It returns the copy of
         the board, and does not change the given board.
         """
+        if len(move) != 2:
+            raise HoundsAndHareError
+
         temp = board
+        m1 = move[0]
+        m2 =  move[1]
         if player == 'A':
-            if move in self.generateHareMoves():
-                temp[self.get_hare_position] = '_'
-                temp[move] = 'A'
+            if self.can_move('hare', m1, m2):
+                temp[m1] = '_'
+                temp[m2] = 'A'
+                return temp
+            else: return print("move invalid")
+        else: 
+            if self.can_move('O', m1, m2):
+                hound_val = temp[m1]
+                temp[m1] = '_'
+                temp[m2] = hound_val
                 return temp
             else: return print("move invalid")
 
@@ -184,13 +196,22 @@ class HoundsAndHare:
         possible_moves_hound3 = EDGES[pos_hound3]
         for move_pos in possible_moves_hound1:
             if self.can_move('O', current_pos=pos_hound1, new_pos=move_pos):
-                    moves_hound1.append(move_pos)
+                    move_list1 = []
+                    move_list1[0] = pos_hound1
+                    move_list1[1] = move_pos
+                    moves_hound1.append(move_list1)
         for move_pos in possible_moves_hound2:
             if self.can_move('O', current_pos=pos_hound2, new_pos=move_pos):
-                    moves_hound2.append(move_pos)
+                    move_list2 = []
+                    move_list2[0] = pos_hound2
+                    move_list2[1] = move_pos
+                    moves_hound2.append(move_list2)
         for move_pos in possible_moves_hound3:
             if self.can_move('O', current_pos=pos_hound3, new_pos=move_pos):
-                    moves_hound3.append(move_pos)
+                    move_list3 = []
+                    move_list3[0] = pos_hound3
+                    move_list3[1] = move_pos
+                    moves_hound3.append(move_list3)
         total_moves = moves_hound1 + moves_hound2 + moves_hound3
         return total_moves
 
@@ -240,6 +261,7 @@ class HoundsAndHare:
                     self.board[i] = "_"
                     min_value = min(min_value, value)
             return min_value
+
     #determines the best move of possible moves from minimax
     def best_move(self):
         max_value = -1
@@ -266,12 +288,14 @@ class HoundsAndHare:
         Returns true if the hare has reached the 
         leftmost position, or has passed the leftmost hound
         """
+        if self.board[0] == 'A':
+            return True
         if "_" not in self.board:
             return True
 
         hounds_pos = [i for i, x in enumerate(self.board) if x == "H"]
 
-        hare_pos = self.board.index("Hare")
+        hare_pos = self.board.index("A")
 
         for h in hounds_pos:
             if abs(hare_pos - h) == 10:
@@ -300,32 +324,32 @@ class HoundsAndHare:
                 print ("player Hound is forfeiting because of error:", str(e))
                 move = []
             if move == []:
-                result = 'W'
+                result = 'A'
                 break
             try:
                 self.makeMove('O', move)
             except HoundsAndHareError:
                 print ("ERROR: invalid move by", p1.name)
-                result = 'W'
+                result = 'A'
                 break
             if show:
                 print (move)
                 print
                 print (self)
-                print ("player W's turn")
+                print ("player Hare's turn")
             try:
                 move = p2.getMove(self.board)
             except Exception as e:
-                print ("player W is forfeiting because of error:", str(e))
+                print ("player Hare is forfeiting because of error:", str(e))
                 move = []
             if move == []:
-                result = 'B'
+                result = 'O'
                 break
             try:
-                self.makeMove('W', move)
+                self.makeMove('A', move)
             except HoundsAndHareError:
                 print ("ERROR: invalid move by", p2.name)
-                result = 'B'
+                result = 'O'
                 break
             if show:
                 print (move)
@@ -467,7 +491,7 @@ class MinimaxPlayer(HoundsAndHare, Player):
 
 
 game = HoundsAndHare()
-game.playOneGame(SimplePlayer(), RandomPlayer(), 1)
+game.playNGames(1, SimplePlayer(), RandomPlayer(), 1)
 
 
 
