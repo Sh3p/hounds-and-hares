@@ -8,6 +8,7 @@ algorithm for both players.
 import abc
 import random
 import traceback
+import copy
 
 """
 builds the edges of the board
@@ -52,18 +53,18 @@ class HoundsAndHare:
 
 
     def __init__(self):
-        self.turn = "O"
+        self.turn = '0'
         self.reset()
 
     def reset(self):
         """
         Resets the starting board state.
         """
-        self.board = ["_"] * 11
-        self.board[10] = "A"
-        self.board[0] = "h1"
-        self.board[1] = "h2"
-        self.board[3] = "h3"
+        self.board = ['_'] * 11
+        self.board[10] = 'A'
+        self.board[0] = 'h1'
+        self.board[1] = 'h2'
+        self.board[3] = 'h3'
 
 
     def __str__(self):
@@ -94,8 +95,11 @@ class HoundsAndHare:
         #         result += str(board[i][j]) + " "
         #     result += "\n"
 
-    def can_move(self, player, current_pos, new_pos):
-        if self.board[new_pos] != "_":
+    def can_move(self, board , player, current_pos, new_pos):
+        if not self.valid(new_pos):
+            return False
+        #print(new_pos)
+        if board[new_pos] != '_':
             return False
         if current_pos == new_pos:
             return False
@@ -106,8 +110,7 @@ class HoundsAndHare:
                 return True
             else:
                 return False
-        else:
-            # hare
+        if player == 'A':
             if new_pos in EDGES[current_pos]:
                 return True
             else:
@@ -120,18 +123,17 @@ class HoundsAndHare:
         """
         return row >= 0 and row <= 10
 
-    def get_hare_position(self):
+    def get_hare_position(self, board):
         """
         returns the current position of the hare
         """
-        for i, val in enumerate(self.board):
-            if val == "A":
-                return i
+        hare = board.index('A')
+        return hare
 
-    def get_hounds_position(self):
-        h1 = self.board.index('h1')
-        h2 = self.board.index('h2')
-        h3 = self.board.index('h3')
+    def get_hounds_position(self, board):
+        h1 = board.index('h1')
+        h2 = board.index('h2')
+        h3 = board.index('h3')
         # for i, val in enumerate(self.board):
         #     if val == "h1":
         #         h1 = i
@@ -167,50 +169,53 @@ class HoundsAndHare:
         # if len(move) != 2:
         #     raise HoundsAndHareError
 
-        temp = board
+        temp = copy.deepcopy(board)
 
         startPos = move[0] 
         endPos =  move[1] 
 
         if player == 'A':
-            if self.can_move('hare', startPos, endPos):
+            if self.can_move(board, 'A' , startPos, endPos):
+                hare_val = temp[startPos]
                 temp[startPos] = '_'
-                temp[endPos] = 'A'
+                temp[endPos] = hare_val
+                self.switch_turn()
                 return temp
             else: return print("move invalid")
         else: 
-            if self.can_move('O', startPos, endPos):
+            if self.can_move(board,'O', startPos, endPos):
                 hound_val = temp[startPos]
                 temp[startPos] = '_'
                 temp[endPos] = hound_val
+                self.switch_turn()
                 return temp
             else: return print("move invalid")
 
-    def generateHoundMoves(self):
+    def generateHoundMoves(self, board):
         """
         Generates all legal moves for the three Hounds
         """
         moves_hound1 = []
         moves_hound2 = []
         moves_hound3 = []
-        pos_hound1, pos_hound2, pos_hound3 = self.get_hounds_position()
+        pos_hound1, pos_hound2, pos_hound3 = self.get_hounds_position(board)
         possible_moves_hound1 = EDGES[pos_hound1]
         possible_moves_hound2 = EDGES[pos_hound2]
         possible_moves_hound3 = EDGES[pos_hound3]
         for move_pos in possible_moves_hound1:
-            if self.can_move('O', current_pos=pos_hound1, new_pos=move_pos):
+            if self.can_move(board,'O' , current_pos=pos_hound1, new_pos=move_pos):
                     move_list1 = []
                     move_list1.append(pos_hound1)
                     move_list1.append(move_pos)
                     moves_hound1.append(move_list1)
         for move_pos in possible_moves_hound2:
-            if self.can_move('O', current_pos=pos_hound2, new_pos=move_pos):
+            if self.can_move(board, 'O' , current_pos=pos_hound2, new_pos=move_pos):
                     move_list2 = []
                     move_list2.append(pos_hound2)
                     move_list2.append(move_pos)
                     moves_hound2.append(move_list2)
         for move_pos in possible_moves_hound3:
-            if self.can_move('O', current_pos=pos_hound3, new_pos=move_pos):
+            if self.can_move(board ,'O', current_pos=pos_hound3, new_pos=move_pos):
                     move_list3 = []
                     move_list3.append(pos_hound3)
                     move_list3.append(move_pos)
@@ -218,63 +223,65 @@ class HoundsAndHare:
         total_moves = moves_hound1 + moves_hound2 + moves_hound3
         return total_moves
 
-    def generateHareMoves(self):
+    def generateHareMoves(self, board):
         """
         Generates all legal moves for the Hare
         """
         moves = []
-        pos = self.get_hare_position()
+        pos = self.get_hare_position(board)
         possible_moves = EDGES[pos]
         for move_pos in possible_moves:
-            if self.can_move('hare', current_pos=pos, new_pos=move_pos):
-                move = [pos, move_pos]
-                moves.append(move)
+            if self.can_move(board, 'A', pos, move_pos):
+                move_list1 = []
+                move_list1.append(pos)
+                move_list1.append(move_pos)
+                moves.append(move_list1)
         return moves
 
-    def generateMoves(self, player):
+    def generateMoves(self, board, player):
         """
         Generates and returns all legal moves for the given player using the
         current board configuration.
         """
 
         if player == 'A':
-            return self.generateHareMoves()
+            return self.generateHareMoves(board)
         else:
-            return self.generateHoundMoves()
+            return self.generateHoundMoves(board)
 
     
-    def minimax(self, depth, is_maximizing):
-        if depth == 0 or self.is_game_over():
+    def minimax(self, board, depth, is_maximizing):
+        if depth == 0 or self.is_game_over(board):
             return 0
 
         if is_maximizing:
             max_value = -1
-            for i, cell in enumerate(self.board):
-                if cell == "_":
-                    self.board[i] = self.turn
+            for i, cell in enumerate(board):
+                if cell == '_':
+                    board[i] = self.turn
                     value = self.minimax(depth - 1, False)
-                    self.board[i] = "_"
+                    board[i] = '_'
                     max_value = max(max_value, value)
             return max_value
         else:
             min_value = 1
-            for i, cell in enumerate(self.board):
-                if cell == "_":
-                    self.board[i] = self.turn
+            for i, cell in enumerate(board):
+                if cell == '_':
+                    board[i] = self.turn
                     value = self.minimax(depth - 1, True)
-                    self.board[i] = "_"
+                    board[i] = '_'
                     min_value = min(min_value, value)
             return min_value
 
     #determines the best move of possible moves from minimax
-    def best_move(self):
+    def best_move(self, board):
         max_value = -1
         best_move = None
-        for i, cell in enumerate(self.board):
-            if cell == "_":
-                self.board[i] = self.turn
+        for i, cell in enumerate(board):
+            if cell == '_':
+                board[i] = self.turn
                 value = self.minimax(9, False)
-                self.board[i] = "_"
+                board[i] = '_'
                 if value > max_value:
                     max_value = value
                     best_move = i
@@ -282,24 +289,24 @@ class HoundsAndHare:
 
 
     def switch_turn(self): 
-        if self.turn == "A":
-            self.turn = "O" 
+        if self.turn == 'A':
+            self.turn = 'A' 
         
-        else:  self.turn = "A"
+        else:  self.turn = 'A'
     
-    def is_game_over(self):
+    def is_game_over(self, board):
         """
         Returns true if the hare has reached the 
         leftmost position, or has passed the leftmost hound
         """
-        if self.board[0] == 'A':
+        if board[0] == 'A':
             return True
         if "_" not in self.board:
             return True
 
-        hounds_pos = [i for i, x in enumerate(self.board) if x == "H"]
+        hounds_pos = [i for i, x in enumerate(board) if x == "H"]
 
-        hare_pos = self.board.index("A")
+        hare_pos = board.index('A')
 
         for h in hounds_pos:
             if abs(hare_pos - h) == 10:
@@ -319,11 +326,13 @@ class HoundsAndHare:
         p2.initialize('A')
         print (p1.name, "vs", p2.name)
         while 1:
+            if self.is_game_over(self.board):
+                return 'A'
             if show:
-                print (self)
+                print(self)
                 print ("Player Hounds's turn")
             try:
-                move = p1.getMove()
+                move = p1.getMove(self.board)
             except Exception as e:
                 print ("player Hound is forfeiting because of error:", str(e))
                 print(traceback.format_exc())
@@ -337,16 +346,17 @@ class HoundsAndHare:
             except HoundsAndHareError:
                 print ("ERROR: invalid move by", p1.name)
                 print(traceback.format_exc())
-
                 result = 'A'
                 break
+            if self.is_game_over(self.board):
+                return 'O'
             if show:
                 print (move)
                 print
-                print (self)
+                print(self)
                 print ("player Hare's turn")
             try:
-                move = p2.getMove()
+                move = p2.getMove(self.board)
             except Exception as e:
                 print ("player Hare is forfeiting because of error:", str(e))
                 print(traceback.format_exc())
@@ -364,7 +374,9 @@ class HoundsAndHare:
                 break
             if show:
                 print (move)
+                print(self)
                 print
+            
         if show:
             print ("Game over")
         return result
@@ -462,13 +474,13 @@ class RandomPlayer(HoundsAndHare, Player):
         self.side = side
         self.name = "RandomPlayer"
 
-    def getMove(self):
-        moves = self.generateMoves(self.side)
+    def getMove(self, board):
+        moves = self.generateMoves(board, self.side)
         n = len(moves)
         if n == 0:
             return []
         else:
-            return moves[random.randrange(0, n)]
+            return moves[random.randrange(0, n )]
 
 
 class SimplePlayer(HoundsAndHare, Player):
@@ -480,9 +492,10 @@ class SimplePlayer(HoundsAndHare, Player):
         self.name = "SimplePlayer"
 
 
-    def getMove(self):
-        moves = self.generateMoves(self.side)
+    def getMove(self, board):
+        moves = self.generateMoves(board, self.side)
         n = len(moves)
+        
         if n == 0:
             return []
         else:
@@ -494,15 +507,15 @@ class MinimaxPlayer(HoundsAndHare, Player):
         self.side = side
         self.name = "MinimaxPlayer"
 
-    def getMove(self):
-        move = self.best_move()
+    def getMove(self, board):
+        move = self.best_move(board)
         return move
 
 
 
 
 game = HoundsAndHare()
-game.playNGames(1, SimplePlayer(), RandomPlayer(), 1)
+game.playNGames(1, SimplePlayer(), SimplePlayer(), 1)
 
 
 
