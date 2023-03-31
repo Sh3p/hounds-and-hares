@@ -338,7 +338,7 @@ class HoundsAndHare:
         first = p1
         second = p2
         for i in range(n):
-            print ("Game", i)
+            print ("Game", i + 1)
             winner = self.playOneGame(first, second, show)
             if winner == 'B':
                 first.won()
@@ -557,4 +557,4 @@ class MinimaxPlayer(HoundsAndHare, Player):
 
 
 game = HoundsAndHare()
-game.playNGames(2,MinimaxPlayer(2), RandomPlayer(), 1)
+game.playNGames(2,RandomPlayer(), RandomPlayer(), 1)
