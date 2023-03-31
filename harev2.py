@@ -2,8 +2,6 @@
 Authors: Christian Shepperson & Samantha Noggle
 An implementation of the 
 game hounds and hare.
-The game plays using the minimax
-algorithm for both players.
 """
 import abc
 import random
@@ -75,30 +73,25 @@ class HoundsAndHare:
         """
         Returns a string representation of the H & H board.
 
-        I am assuming the board array is laid out like:
+        board array is laid out like:
         X 1 4 7 X
         0 2 5 8 10
         X 3 6 9 X
         """
-        #print(board)
         topRow = f"X {board[1]} {board[4]} {board[7]} X"
         midRow = f"\n{board[0]} {board[2]} {board[5]} {board[8]} {board[10]}"
         botRow = f"\nX {board[3]} {board[6]} {board[9]} X"
 
         return f"{topRow}{midRow}{botRow}"
-        # for i in range(self.size):
-        #     result += str(i) + " "
-        # result += "\n"
-        # for i in range(self.size):
-        #     result += str(i) + " "
-        #     for j in range(self.size):
-        #         result += str(board[i][j]) + " "
-        #     result += "\n"
 
     def can_move(self, board , player, current_pos, new_pos):
+        """
+        Checks if a move is valid given a current position and new position
+        Checks which side player is on
+        
+        """
         if not self.valid(new_pos):
             return False
-        #print(new_pos)
         if board[new_pos] != '_':
             return False
         if current_pos == new_pos:
@@ -131,16 +124,13 @@ class HoundsAndHare:
         return hare
 
     def get_hounds_position(self, board):
+        """
+        returns the current position of the hounds
+        """
         h1 = board.index('h1')
         h2 = board.index('h2')
         h3 = board.index('h3')
-        # for i, val in enumerate(self.board):
-        #     if val == "h1":
-        #         h1 = i
-        #     elif val == "h2":
-        #         h2 = i
-        #     elif val == "h3":
-        #         h3 = i
+      
         return (h1, h2, h3)
     
 
@@ -166,8 +156,6 @@ class HoundsAndHare:
         raise a HoundsAndHareError if the move is invalid. It returns the copy of
         the board, and does not change the given board.
         """
-        # if len(move) != 2:
-        #     raise HoundsAndHareError
 
         temp = copy.deepcopy(board)
 
@@ -249,45 +237,6 @@ class HoundsAndHare:
         else:
             return self.generateHoundMoves(board)
 
-    """
-    def minimax(self, board, depth, is_maximizing):
-        if depth == 0 or self.is_game_over(board):
-            return 0
-
-        if is_maximizing:
-            max_value = -1
-            for i, cell in enumerate(board):
-                if cell == '_':
-                    board[i] = self.turn
-                    value = self.minimax(board, depth - 1, False)
-                    board[i] = '_'
-                    max_value = max(max_value, value)
-            return max_value
-        else:
-            min_value = 1
-            for i, cell in enumerate(board):
-                if cell == '_':
-                    board[i] = self.turn
-                    value = self.minimax(board, depth - 1, True)
-                    board[i] = '_'
-                    min_value = min(min_value, value)
-            return min_value
-
-    #determines the best move of possible moves from minimax
-    def best_move(self, board):
-        max_value = -1
-        best_move = None
-        for i, cell in enumerate(board):
-            if cell == '_':
-                board[i] = self.turn
-                value = self.minimax(board, 9, False)
-                board[i] = '_'
-                if value > max_value:
-                    max_value = value
-                    best_move = i
-        return best_move
-"""
-
     def switch_turn(self): 
         if self.turn == 'A':
             self.turn = 'A' 
@@ -329,7 +278,6 @@ class HoundsAndHare:
             if self.is_game_over(self.board):
                 return 'A'
             if show:
-                print(self)
                 print ("Player Hounds's turn")
             try:
                 move = p1.getMove(self.board)
@@ -500,19 +448,11 @@ class SimplePlayer(HoundsAndHare, Player):
             return []
         else:
             return moves[0]
-"""
+
 class MinimaxPlayer(HoundsAndHare, Player):
-
-    def initialize(self, side):
-        self.side = side
-        self.name = "MinimaxPlayer"
-
-    def getMove(self, board):
-        move = self.best_move(board)
-        return move
-"""
-class MinimaxPlayer(HoundsAndHare, Player):
-
+    """
+    Uses minimax to determine moves
+    """
     def __init__(self, depthLimit):
         HoundsAndHare.__init__(self)
         self.limit = depthLimit
@@ -617,24 +557,4 @@ class MinimaxPlayer(HoundsAndHare, Player):
 
 
 game = HoundsAndHare()
-game.playNGames(1, RandomPlayer(), MinimaxPlayer(2), 1)
-
-
-
-    # Code for the AI player
-
-
-
-# #exceutes a game
-# def play_game():
-#     game = HoundsAndHare()
-#     while not game.is_game_over():
-#         print("Current Board:", " ".join(game.board))
-#         move = game.best_move()
-#         print("Best move:", move)
-#         game.board[move] = game.turn
-#         game.switch_turn()
-#         print("Final Board:", " ".join(game.board))
-
-
-# play_game()
+game.playNGames(2,MinimaxPlayer(2), RandomPlayer(), 1)
