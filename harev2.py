@@ -249,7 +249,7 @@ class HoundsAndHare:
         else:
             return self.generateHoundMoves(board)
 
-    
+    """
     def minimax(self, board, depth, is_maximizing):
         if depth == 0 or self.is_game_over(board):
             return 0
@@ -259,7 +259,7 @@ class HoundsAndHare:
             for i, cell in enumerate(board):
                 if cell == '_':
                     board[i] = self.turn
-                    value = self.minimax(depth - 1, False)
+                    value = self.minimax(board, depth - 1, False)
                     board[i] = '_'
                     max_value = max(max_value, value)
             return max_value
@@ -268,7 +268,7 @@ class HoundsAndHare:
             for i, cell in enumerate(board):
                 if cell == '_':
                     board[i] = self.turn
-                    value = self.minimax(depth - 1, True)
+                    value = self.minimax(board, depth - 1, True)
                     board[i] = '_'
                     min_value = min(min_value, value)
             return min_value
@@ -280,13 +280,13 @@ class HoundsAndHare:
         for i, cell in enumerate(board):
             if cell == '_':
                 board[i] = self.turn
-                value = self.minimax(9, False)
+                value = self.minimax(board, 9, False)
                 board[i] = '_'
                 if value > max_value:
                     max_value = value
                     best_move = i
         return best_move
-
+"""
 
     def switch_turn(self): 
         if self.turn == 'A':
@@ -500,7 +500,7 @@ class SimplePlayer(HoundsAndHare, Player):
             return []
         else:
             return moves[0]
-
+"""
 class MinimaxPlayer(HoundsAndHare, Player):
 
     def initialize(self, side):
@@ -510,12 +510,114 @@ class MinimaxPlayer(HoundsAndHare, Player):
     def getMove(self, board):
         move = self.best_move(board)
         return move
+"""
+class MinimaxPlayer(HoundsAndHare, Player):
+
+    def __init__(self, depthLimit):
+        HoundsAndHare.__init__(self)
+        self.limit = depthLimit
+
+    def initialize(self, side):
+        self.side = side
+        self.name = "MinimaxPlayer"
 
 
+    def max(self, board, depth):
+        moves = self.generateMoves(board, self.side)
+        bestMove = 0
+        currentMove = -float("inf")
+
+        if depth > self.depthLimit:
+            return self.eval(board)
+
+        for move in moves:
+            bestVal = (self.min(self.nextBoard(board, self.side, move), depth+1))
+            if bestVal > currentMove:
+                currentMove = bestVal
+                bestMove = move
+
+        return currentMove, bestMove
+
+    def min(self, board, depth):
+        moves = self.generateMoves(board, self.side)
+        bestMove = 0
+        currentMove = float("inf")
+
+        if depth > self.depthLimit:
+            return self.eval(board)
+
+        for move in moves:
+            bestVal = (self.max(self.nextBoard(board, self.side, move), depth+1))
+            if bestVal > currentMove:
+                currentMove = bestVal
+                bestMove = move
+
+        return currentMove, bestMove  
+                
+
+    def getMove(self, board):
+        moves = self.generateMoves(board, self.side)
+        if not moves:
+            return []
+
+        value = []
+        alpha = -float("inf")
+        for move in moves:
+            value.append(self.minimax(self.nextBoard(board, self.side, move), 1, alpha, float("inf")))
+            if max(value) > alpha:
+                alpha = max(value)
+        return moves[value.index(max(value))]
+
+    def minimax(self, board, depth, alpha, beta):
+        if depth >= self.limit:
+            return self.eval(board)
+        isMax = depth % 2 == 0
+        if isMax:
+            next_boards = self.helper(board, self.side)
+        else:
+            next_boards = self.helper(board, self.switch_turn())
+
+        if not next_boards:
+            if isMax:
+                return -float("inf")
+            else:
+                return float("inf")
+        value = []
+        new_alpha = alpha
+        new_beta = beta
+        for next_board in next_boards:
+            if value:
+                if isMax:
+                    if max(value) >= beta:
+                        break
+                    if max(value) > alpha:
+                        new_alpha = max(value)
+                else:
+                    if min(value) <= alpha:
+                        break
+                    if min(value) < beta:
+                        new_beta = min(value)
+
+            value.append(self.minimax(next_board, depth+1, new_alpha, new_beta))
+
+        if isMax:
+            return max(value)
+        else:
+            return min(value)
+
+    def helper(self, board, side):
+        moves = self.generateMoves(board, side)
+        boards = []
+        for move in moves:
+            boards.append(self.nextBoard(board, side, move))
+        return boards
+
+    def eval(self, board):
+        return len(self.generateMoves(board, self.side))
 
 
 game = HoundsAndHare()
-game.playNGames(1, SimplePlayer(), SimplePlayer(), 1)
+game.playNGames(1, RandomPlayer(), MinimaxPlayer(2), 1)
 
 
 
