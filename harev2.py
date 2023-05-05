@@ -177,7 +177,14 @@ class HoundsAndHare:
             return 1
         else: # 3 6 9
             return 2
-    
+
+    def getCoordinates(self, board, piece):
+        """
+        Given a string for a piece, returns its coordinates
+        """
+        location = [self.getRow(board, piece), self.getColumn(board, piece)]
+        return location
+
 
     def contains(self, board, row, symbol):
         """

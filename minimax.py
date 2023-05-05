@@ -116,11 +116,10 @@ class MinimaxPlayer(HoundsAndHare, Player):
         :return: The taxicab distance between p1 and p2
                 (not the amount of moves it is away)
         """
-        p1Loc = [self.getRow(board, p1), self.getColumn(board, p1)]
-        p2Loc = [self.getRow(board, p2), self.getColumn(board, p2)]
+        p1Loc = self.getCoordinates(board, p1)
+        p2Loc = self.getCoordinates(board, p2)
 
         return sum(abs(val1-val2) for val1, val2 in zip(p1Loc, p2Loc))
-
 
 
     def eval(self, board):
@@ -135,24 +134,39 @@ class MinimaxPlayer(HoundsAndHare, Player):
         #      -----      Hare Specific      -----
 
         # Distance from goal spot
-        goalDist = self.getColumn(board, 'A')
+        goalDist = -self.getColumn(board, 'A') # low number is better
 
         # Cumulative manhattan distance from Hounds
 
         # How many hounds are to the right of the hare
-
+        passedHounds = self.numHoundsPassed(board)
 
         # How far away is the move from the closest hound 
 
         #      -----     Hound Specific      -----
 
+        # Check if the hare will be trapped
+        if self.generateHareMoves(board) == 0:
+            hareTrapped = 100
+        else:
+            hareTrapped = -100
+
         # Proximity to eachother
 
-        # Cumulative Distance from Hare
+        # Cumulative Distance between each hound and the Hare
+        cumHareDist = 0
+        doggies = ['h1', 'h2', 'h3']
+        for dawg in doggies:
+            cumHareDist += self.distanceBetween(board, dawg, 'A')
 
+        ##################################################
 
-
-        return moreMoves
+        if self.side == 'A':
+            return (passedHounds + -abs(goalDist))
+        else:
+            return (-abs(passedHounds) + moreMoves + cumHareDist + goalDist + hareTrapped)
 
 game = HoundsAndHare()
-game.playNGames(100, MinimaxPlayer(5), RandomPlayer(), False)
+game.playNGames(100, MinimaxPlayer(5), SimplePlayer(), False)
+
+# The Hounds REFUSE to win
