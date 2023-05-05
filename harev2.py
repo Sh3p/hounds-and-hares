@@ -52,12 +52,15 @@ class HoundsAndHare:
 
     def __init__(self):
         self.turn = '0'
+        self.stall = 0
         self.reset()
 
     def reset(self):
         """
         Resets the starting board state.
         """
+        self.stall = 0
+
         self.board = ['_'] * 11
         self.board[10] = 'A'
         self.board[0] = 'h1'
@@ -133,6 +136,48 @@ class HoundsAndHare:
       
         return (h1, h2, h3)
     
+    def getColumn(self, board, piece):
+        """
+        Ugly way to do columns becuase the board
+        is a 1D list
+
+        :param board: The board
+        :param piece: String of the piece to check: h1, A, h2...
+        :return: The column where the piece is currently
+        """
+
+        i = board.index(piece)
+
+        if i == 0:
+            return 0
+        elif i >= 1 and i <= 3:
+            return 1
+        elif i >= 4 and i <= 6:
+            return 2
+        elif i >= 7 and i <= 9:
+            return 3
+        else:
+            return 4
+
+    def getRow(self, board, piece):
+        """
+        Ugly way to do rows becuase the board
+        is a 1D list
+
+        :param board: The board
+        :param piece: String of the piece to check: h1, A, h2...
+        :return: The row where the piece is currently
+        """
+
+        i = board.index(piece)
+
+        if i == 1 or i == 4 or i == 7:
+            return 0
+        elif i == 0 or i == 2 or i == 5 or i == 8 or i == 10:
+            return 1
+        else: # 3 6 9
+            return 2
+    
 
     def contains(self, board, row, symbol):
         """
@@ -141,12 +186,31 @@ class HoundsAndHare:
         """
         return self.valid(row) and board[row]==symbol
 
+    def opponent(self, player):
+        """
+        Given a player symbol, returns the opponent's symbol, 'A' for hare,
+        or 'O' for hound.
+        """
+        if player == 'A':
+            return 'O'
+        else:
+            return 'A'
+
     def makeMove(self, player, move):
         """
         Updates the current board with the next board created by the given
         move.
         """
         self.board = self.nextBoard(self.board, player, move)
+
+        # Check for a hound consecutively moving vertically 
+        if player == 'O' and abs(move[0] - move[1]) == 1:
+            self.stall += 1
+        # Refresh the counter if a the hound is not moving vertically
+        elif player == 'O' and abs(move[0] - move[1]) != 1:
+            self.stall = 0
+        
+
 
     def nextBoard(self, board, player, move):
         """
@@ -242,24 +306,41 @@ class HoundsAndHare:
             self.turn = 'A' 
         
         else:  self.turn = 'A'
+
+    def numHoundsPassed(self, board):
+        """
+        How many hounds the hare has passed
+        """
+        doggies = [self.getColumn(board, 'h1'), self.getColumn(board, 'h1'), self.getColumn(board, 'h1')]
+        hare = self.getColumn(board, 'A')
+        passedDawgs = 0
+
+        for dawg in doggies:
+            if dawg >= hare:
+                passedDawgs += 1
+
+        return passedDawgs
     
     def is_game_over(self, board):
         """
         Returns true if the hare has reached the 
-        leftmost position, or has passed the leftmost hound
+        leftmost position, has passed the leftmost hound,
+        or the hounds have stalled for too long
         """
+
         if board[0] == 'A':
             return True
         if "_" not in self.board:
             return True
 
-        hounds_pos = [i for i, x in enumerate(board) if x == "H"]
+        # Has the hare passed all hounds?
+        if self.numHoundsPassed == 3:
+            return True
 
-        hare_pos = board.index('A')
-
-        for h in hounds_pos:
-            if abs(hare_pos - h) == 10:
-                return True
+        
+        # Has the hound stalled for too long?
+        if self.stall == 10:
+            return True
 
         return False
     
@@ -269,20 +350,21 @@ class HoundsAndHare:
         between them.  Returns 'O' if the Hounds win, or 'A' if
         the Hare wins. When show is true, it will display each move
         in the game.
-        """
+        """        
         self.reset()
         p1.initialize('O')
         p2.initialize('A')
         print (p1.name, "vs", p2.name)
         while 1:
             if self.is_game_over(self.board):
-                return 'A'
+                result = 'A'
+                break
             if show:
-                print ("Player Hounds's turn")
+                print ("\nPlayer Hounds's turn")
             try:
                 move = p1.getMove(self.board)
             except Exception as e:
-                print ("player Hound is forfeiting because of error:", str(e))
+                print ("Player Hound is forfeiting because of error:", str(e))
                 print(traceback.format_exc())
 
                 move = []
@@ -297,16 +379,21 @@ class HoundsAndHare:
                 result = 'A'
                 break
             if self.is_game_over(self.board):
-                return 'O'
+                if self.stall == 10:
+                    result = 'A'
+                    break
+                else:
+                    result = 'O'
+                    break
             if show:
                 print (move)
                 print
                 print(self)
-                print ("player Hare's turn")
+                print ("\nPlayer Hare's turn")
             try:
                 move = p2.getMove(self.board)
             except Exception as e:
-                print ("player Hare is forfeiting because of error:", str(e))
+                print ("Player Hare is forfeiting because of error:", str(e))
                 print(traceback.format_exc())
 
                 move = []
@@ -340,17 +427,22 @@ class HoundsAndHare:
         for i in range(n):
             print ("Game", i + 1)
             winner = self.playOneGame(first, second, show)
+            side = {'A': 'Hare', 'O': 'Hound'}
             if winner == 'B':
                 first.won()
                 second.lost()
-                print (first.name, "wins")
+                print (f"{first.name} ({side[first.side]}) wins!")
             else:
                 first.lost()
                 second.won()
-                print (second.name, "wins")
+                print (f"{second.name} ({side[second.side]}) wins!")
             temp = first
             first = second
             second = temp
+
+        print(first.results())
+        print
+        print(second.results())
 
 
 
@@ -405,11 +497,16 @@ class HumanPlayer(Player):
         self.side = side
         self.name = "Human"
 
-    def getMove(self):
+    def getMove(self, board):        
         if self.side == "A":
-            inputs = list(map( int, input("Enter a valid move for Hare: ").split()))
+            endPos = input("Enter a valid move for Hare: ")
+            startPos = board.index('A')
+            inputs = [startPos, endPos]
         else:
-            inputs = list(map( int, input("Enter which hound to move and a valid move: ").split()))
+            inputs = list(input("Enter which hound to move and a valid move: ").split())
+            inputs[1] = int(inputs[1])
+            inputs[0] = board.index(inputs[0])
+
         if inputs[1] == -1:
             return []
         return inputs
@@ -449,112 +546,3 @@ class SimplePlayer(HoundsAndHare, Player):
         else:
             return moves[0]
 
-class MinimaxPlayer(HoundsAndHare, Player):
-    """
-    Uses minimax to determine moves
-    """
-    def __init__(self, depthLimit):
-        HoundsAndHare.__init__(self)
-        self.limit = depthLimit
-
-    def initialize(self, side):
-        self.side = side
-        self.name = "MinimaxPlayer"
-
-
-    def max(self, board, depth):
-        moves = self.generateMoves(board, self.side)
-        bestMove = 0
-        currentMove = -float("inf")
-
-        if depth > self.depthLimit:
-            return self.eval(board)
-
-        for move in moves:
-            bestVal = (self.min(self.nextBoard(board, self.side, move), depth+1))
-            if bestVal > currentMove:
-                currentMove = bestVal
-                bestMove = move
-
-        return currentMove, bestMove
-
-    def min(self, board, depth):
-        moves = self.generateMoves(board, self.side)
-        bestMove = 0
-        currentMove = float("inf")
-
-        if depth > self.depthLimit:
-            return self.eval(board)
-
-        for move in moves:
-            bestVal = (self.max(self.nextBoard(board, self.side, move), depth+1))
-            if bestVal > currentMove:
-                currentMove = bestVal
-                bestMove = move
-
-        return currentMove, bestMove  
-                
-
-    def getMove(self, board):
-        moves = self.generateMoves(board, self.side)
-        if not moves:
-            return []
-
-        value = []
-        alpha = -float("inf")
-        for move in moves:
-            value.append(self.minimax(self.nextBoard(board, self.side, move), 1, alpha, float("inf")))
-            if max(value) > alpha:
-                alpha = max(value)
-        return moves[value.index(max(value))]
-
-    def minimax(self, board, depth, alpha, beta):
-        if depth >= self.limit:
-            return self.eval(board)
-        isMax = depth % 2 == 0
-        if isMax:
-            next_boards = self.helper(board, self.side)
-        else:
-            next_boards = self.helper(board, self.switch_turn())
-
-        if not next_boards:
-            if isMax:
-                return -float("inf")
-            else:
-                return float("inf")
-        value = []
-        new_alpha = alpha
-        new_beta = beta
-        for next_board in next_boards:
-            if value:
-                if isMax:
-                    if max(value) >= beta:
-                        break
-                    if max(value) > alpha:
-                        new_alpha = max(value)
-                else:
-                    if min(value) <= alpha:
-                        break
-                    if min(value) < beta:
-                        new_beta = min(value)
-
-            value.append(self.minimax(next_board, depth+1, new_alpha, new_beta))
-
-        if isMax:
-            return max(value)
-        else:
-            return min(value)
-
-    def helper(self, board, side):
-        moves = self.generateMoves(board, side)
-        boards = []
-        for move in moves:
-            boards.append(self.nextBoard(board, side, move))
-        return boards
-
-    def eval(self, board):
-        return len(self.generateMoves(board, self.side))
-
-
-game = HoundsAndHare()
-game.playNGames(2,RandomPlayer(), RandomPlayer(), 1)
